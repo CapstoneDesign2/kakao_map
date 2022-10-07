@@ -40,7 +40,7 @@ def facilities_return(x, y, radius, keyword):
         'Authorization': f'KakaoAK {os.environ["kakao"]}',
         'Content-Type': 'application/x-www-form-urlencoded',
     }
-    #'Authorization': f'KakaoAK {os.environ["kakao_api_key"]}',
+    
     params = {
         'x': f'{x}',
         'y': f'{y}',
