@@ -17,8 +17,13 @@ import re
 from bs4 import BeautifulSoup
 
 json_file = 'temp.json'
-write_file = 'result.txt'
-result_dict = {}
+write_file = 'result.json'
+write_dict = {
+    "documents": []
+}
+result_dict = {
+
+}
 
 class LenError(Exception):
     def __str__(self):
@@ -31,14 +36,11 @@ def get_comments(response):
     response['comment']를 return 아니라면 hasNext값이 False가 될 때까지 loop를 돌면서 
     https://place.map.kakao.com/commentlist/v/(가게 id)/(마지막 comment 의 comment_id)
     '''
-    print(f"response has next {response['comment']['hasNext']}")
-    
+    #print(f"response has next {response['comment']['hasNext']}")
+
     # 만약에 hasNext가 false라면 원래 값을 return 해준다.
     if not response['comment']['hasNext']:
         return
-
-    # dictionary의 마지막 index
-    last_idx = 0
     
     #while loop 을 돌면서 response['commnet']['list']에 값을 추가하는 방식
     while True:
@@ -46,15 +48,11 @@ def get_comments(response):
         # 맨 마지막 key 값을 return 하게 한다.
         #https://stackoverflow.com/questions/16125229/last-key-in-python-dictionary
         last_comment = response['comment']['list'][-1]
-        last_idx = list(response['comment']['list'])[-1]
-
-        #print(last_idx)
-        #print(last_comment)
         
         last_comment_id = last_comment['commentid']
         store_id = response['basicInfo']['cid']
         
-        print(f'last comment id is : {last_comment_id} store id is : {store_id}')
+        #print(f'last comment id is : {last_comment_id} store id is : {store_id}')
         
         # 새로운 comment를 받아줄 url이다.
         comment_retrive_url = f'https://place.map.kakao.com/commentlist/v/{store_id}/{last_comment_id}'
@@ -110,30 +108,47 @@ def one_store_analyze(store_data):
     store_data(dictionary) : 가게의 정보가 담긴 dictionary 
     browser 셀레니움 드라이버
     '''
+    global write_dict
+    
 
-    # url 을 초기화 
+    # 디버깅 부
+    
     # https://place.map.kakao.com/20000829 언플러그드 신촌
     # https://place.map.kakao.com/8122805 클로리스
-    store_data['place_url'] = 'http://place.map.kakao.com/606314892'
-    store_data['id'] = 606314892
+    # https://place.map.kakao.com/751832575 리뷰 없는 곳
+    #store_data['place_url'] = 'https://place.map.kakao.com/751832575'
+    #store_data['id'] = 751832575
+    
+    # 디버깅 부
 
+
+    # url 을 초기화 
     url = store_data['place_url']
     store_id = store_data['id']
     #https://place.map.kakao.com/main/v/884526216
     print(url)
+    print(store_data['place_name'])
     # url에서 정보를 가져온다.
     
     info_url = f'https://place.map.kakao.com/main/v/{store_id}'
     # basicInfo의 feedback은 댓글나열한거
     # s2 graph가 매장의 정보를 나열한거
     
-    # get_commnet 에서 댓글 가져오기 json 형식
-    # [comment][list]에 0, 1, 2 추가하는 방식
-    response = requests.get(info_url).json()
-    get_comments(response)
     
-    print(response['comment']['list'])
-    print(len(response['comment']['list']))
+    response = requests.get(info_url).json()
+
+    # 만약에 comment라는 key 값이 없으면 그냥 return
+    if 'comment' not in response.keys():
+        print('리뷰 엥꼬~')
+        return
+
+    # get_commnet 에서 댓글 가져오기 json 형식
+    get_comments(response)
+    #print(response)
+    write_dict['documents'].append(response)
+
+    #print(response['comment']['list'])
+    #print(len(response['comment']['list']))
 
 def read_result_dict():
     global result_dict
@@ -160,14 +175,19 @@ if __name__ == '__main__':
       "x": "126.94335642719437",
       "y": "37.55884593416747"
     }
-    #read_result_dict()
-    #f = open(write_file, 'w')
+    read_result_dict()
+    f = open(write_file, 'w')
     
     #one_store_analyze(doc, browser, f)
 
     # 이미 json은 중복 제거 했고
     #print(f'read {len(result_dict["documents"])} stores')
     
-    #for i in result_dict['documents']:
-    #    one_store_analyze(i, browser, f)
-    one_store_analyze(doc)
+    # 매장 id로 매장 구분할까? dictionary에 있는 이상은 그게 쉬울꺼 같기도?
+    for i in result_dict['documents']:
+        one_store_analyze(i)
+    
+    #one_store_analyze(doc)
+    json.dump(write_dict, f, ensure_ascii=False)
+    f.close()
+    
