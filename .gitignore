@@ -1,0 +1,5 @@
+geckodriver.log
+webdriver/
+Python-3.7.0/
+*.txt
+*.json
