@@ -39,11 +39,9 @@ def get_comments(response):
     #print(f"response has next {response['comment']['hasNext']}")
 
     # 만약에 hasNext가 false라면 원래 값을 return 해준다.
-    if not response['comment']['hasNext']:
-        return
-    
+
     #while loop 을 돌면서 response['commnet']['list']에 값을 추가하는 방식
-    while True:
+    while response['comment']['hasNext']:
         # 항상 2번 key값이 마지막이다.
         # 맨 마지막 key 값을 return 하게 한다.
         #https://stackoverflow.com/questions/16125229/last-key-in-python-dictionary
@@ -64,10 +62,8 @@ def get_comments(response):
         
         # expend 해주기
         response['comment']['list'].extend(comment_response['comment']['list'])
-
-        if not comment_response['comment']['hasNext']:
-            break
-        
+        # hasNext를 comment_response 의 hasNext로 바꿔준다.
+        response['comment']['hasNext'] = comment_response['comment']['hasNext']        
 
 
 def scroll(browser):
