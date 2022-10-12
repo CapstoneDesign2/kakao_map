@@ -18,11 +18,16 @@ from bs4 import BeautifulSoup
 
 json_file = 'temp.json'
 write_file = 'result.json'
+comment_file = 'comments.json'
 write_dict = {
     "documents": []
 }
 result_dict = {
 
+}
+
+comment_dict = {
+    "documents" : []
 }
 
 class LenError(Exception):
@@ -105,6 +110,7 @@ def one_store_analyze(store_data):
     browser 셀레니움 드라이버
     '''
     global write_dict
+    global comment_dict
     
 
     # 디버깅 부
@@ -130,17 +136,23 @@ def one_store_analyze(store_data):
     # basicInfo의 feedback은 댓글나열한거
     # s2 graph가 매장의 정보를 나열한거
     
-    
     response = requests.get(info_url).json()
 
     # 만약에 comment라는 key 값이 없으면 그냥 return
-    if 'comment' not in response.keys():
+    if 'comment' not in response.keys() or 'list' not in response['comment'].keys():
         print('리뷰 엥꼬~')
         return
 
     # get_commnet 에서 댓글 가져오기 json 형식
     get_comments(response)
     #print(response)
+    
+    
+    
+    for comment in response['comment']['list']:
+        comment['store_id'] = response['basicInfo']['cid']
+        comment_dict['documents'].append(comment)
+    
     write_dict['documents'].append(response)
 
     #print(response['comment']['list'])
@@ -173,6 +185,7 @@ if __name__ == '__main__':
     }
     read_result_dict()
     f = open(write_file, 'w')
+    f2 = open(comment_file, 'w')
     
     #one_store_analyze(doc, browser, f)
 
@@ -185,5 +198,8 @@ if __name__ == '__main__':
     
     #one_store_analyze(doc)
     json.dump(write_dict, f, ensure_ascii=False)
+    json.dump(comment_dict, f2, ensure_ascii=False)
+    
     f.close()
+    f2.close()
     
