@@ -1,5 +1,6 @@
 from unittest import result
 import requests, json, os, sys, time
+import pymysql
 
 location_return_url = ''
 facilities_return_url = 'https://dapi.kakao.com/v2/local/search/keyword.json'
