@@ -112,22 +112,8 @@ def write_to_db(result_dict):
     
     #이미 테이블 있으면 삭제한다.
     #engine.execute(f'DROP TABLE IF EXISTS {STORE_TABLE_NAME}')
+    engine.execute(f'DELETE FROM {STORE_TABLE_NAME}')
     # 이 블럭은 table 을 만든다.
-    
-    # table 만드는데 사용하는 metadata 생성 
-    # metadata = db.MetaData()
-    
-    # db.Table(STORE_TABLE_NAME,
-    #     metadata,
-    #     db.Column('id', db.Integer, primary_key=True, autoincrement=False),
-    #     db.Column('place_name', db.String(50)),
-    #     db.Column('phone', db.String(30)),
-    #     db.Column('x', db.Numeric(20, 16)),
-    #     db.Column('y', db.Numeric(20, 16)),
-    # )   
-    
-    # metadata.create_all(engine)
-    
     
     #engine 에 종속적인 세션을 만든다.
     Session = sessionmaker(engine)
@@ -139,28 +125,7 @@ def write_to_db(result_dict):
         store = StoreClass(store_info['id'], store_info['place_name'], store_info['phone'], store_info['x'], store_info['y'])
         session.add(store)
     session.commit()
-
-def write_result():
-    global json_file
-    
-    
-    # 파이썬은 완벽하게 json을 json 형식으로 쓰지 않기 때문에 json.dump라고 해줘야 한다.
-    for i in result_dict['documents']:
-        i['distance'] = 0
-    
-    # 중복 제거
-    result_dict['documents'] = [dict(t) for t in {tuple(d.items()) for d in result_dict['documents']}]
-
-    print(f'you have {len(result_dict["documents"])} in json file!')
-    
-    # 파일에 쓰기
-    #f = open(json_file, 'w')
-    #json.dump(result_dict, f, ensure_ascii=False)
-    #f.close()
-
-
-#read_result_dict()
-
+  
 
 facilities_return(126.936611826163, 37.55518625891015, 250, '카페')
 #facilities_return(126.936611826163, 37.55675399978744, 250, '카페')

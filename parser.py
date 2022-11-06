@@ -64,7 +64,7 @@ def one_store_analyze(store_id):
     
     # basicInfo의 feedback은 댓글나열한거
     # s2 graph가 매장의 정보를 나열한거
-    
+    print(info_url)
     response = requests.get(info_url).json()
 
     # 만약에 comment라는 key 값이 없으면 그냥 return
@@ -78,12 +78,28 @@ def one_store_analyze(store_id):
     
     ## comment 디비에 저장
     for comment in response['comment']['list']:
-        store = CommentClass(comment['commentid'], 
-                             comment['contents'], 
-                             comment['point'], 
+        # datetime 형식으로 바꾸는게 낫겠지?
+        #print(f"comment {comment.get('contents')}")
+        #print(f"comment {comment.get('username')}")
+        # 문자열 없거나 길이 초과시 대처법
+        comment_final = ""
+        comment_temp = comment.get('contents')
+        
+        if not comment_temp:
+            comment_final = ""
+        elif len(comment_temp) > 512:
+            comment_final = comment_temp[:510]
+        else:
+            comment_final = comment_temp
+        
+        store = CommentClass(
+                             comment['commentid'],  
+                             comment_final,
+                             comment['point'],
                              comment['photoCnt'], 
                              comment['likeCnt'],
                              comment['kakaoMapUserId'],
+                             comment.get('username'),
                              photoList="",
                              strengths="",
                              userCommentCount=comment['userCommentCount'],
@@ -92,6 +108,7 @@ def one_store_analyze(store_id):
                              store_id=store_id
                             )
         session.add(store)
+        
     session.commit()
     ## comment 디비에 저장
 
@@ -107,18 +124,7 @@ def read_store_from_database():
     return ret
 
 def comment_db_control():
-    engine.execute(f'DROP TABLE IF EXISTS {COMMENT_TABLE_NAME}')
-    # 이 블럭은 table 을 만든다.
-    
-    # table 만드는데 사용하는 metadata 생성 
-    metadata = db.MetaData()
-    Base = declarative_base()
-    
-    #CommentClass.__table__.drop(engine)
-    CommentClass.__table__.create(engine)
-    
-    #metadata.create_all(engine)
-    # table 생성 완료
+    engine.execute(f'DELETE FROM {COMMENT_TABLE_NAME}')
 
 if __name__ == '__main__':
     
@@ -146,7 +152,9 @@ if __name__ == '__main__':
     #exit()
     
     comment_db_control()
-    exit()
+    
+    #one_store_analyze(763496937)
+    #comment.get('contents'),
     for id in store_id_list:
         one_store_analyze(id)
     
