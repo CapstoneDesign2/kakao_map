@@ -21,6 +21,13 @@ json_file = 'temp.json'
 
 Base = declarative_base()
 
+result_dict = {
+        'documents' : [],
+        'meta' : {
+            
+        }
+    }
+
 class store_class(Base):
     __tablename__ = 'store'  # 데이터베이스에서 사용할 테이블 이름입니다.
 
@@ -40,12 +47,6 @@ class store_class(Base):
     def __repr__(self):
        return f"User(id={self.id!r}, name={self.place_name!r}, phone={self.phone!r}, x={self.x}, y={self.y})"
 
-result_dict = {
-        'documents' : [],
-        'meta' : {
-            
-        }
-    }
 
 def location_return(location):
     '''
@@ -136,13 +137,12 @@ def write_to_db(result_dict):
     #디비 연결
     engine = db.create_engine(f'mysql+pymysql://{user}:{passwd}@{host}:{port}/{database}')
     
-    # table 만드는데 사용하는 metadata 생성    
-    metadata = db.MetaData()
-
-    
     #이미 테이블 있으면 삭제한다.
     engine.execute('DROP TABLE IF EXISTS store')
 
+    # table 만드는데 사용하는 metadata 생성    
+    metadata = db.MetaData()
+    
     db.Table('store',
         metadata,
         db.Column('id', db.Integer, primary_key=True, autoincrement=False),
@@ -164,8 +164,6 @@ def write_to_db(result_dict):
         store = store_class(store_info['id'], store_info['place_name'], store_info['phone'], store_info['x'], store_info['y'])
         session.add(store)
     session.commit()
-
-
 
 def write_result():
     global json_file
@@ -201,7 +199,14 @@ facilities_return(126.939156399652, 37.55518625891015, 250, '카페')
 facilities_return(126.939156399652, 37.55675399978744, 250, '카페')
 facilities_return(126.939156399652, 37.55848393786034, 250, '카페')
 
-write_result()
+#write_result()
+
+# distance 통일시켜서 중복되게 유도한다.
+for i in result_dict['documents']:
+        i['distance'] = 0
+
+# 중복 제거
+result_dict['documents'] = [dict(t) for t in {tuple(d.items()) for d in result_dict['documents']}]
 
 write_to_db(result_dict)
 
