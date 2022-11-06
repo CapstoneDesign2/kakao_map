@@ -3,6 +3,7 @@
 
 import sys
 import pymysql
+import sqlalchemy as db
 
 host='localhost'
 # Default 값은 3306  (Port 번호는 변경될 수 있음)

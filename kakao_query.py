@@ -1,11 +1,44 @@
 from unittest import result
 import requests, json, os, sys, time
 import pymysql
+import sqlalchemy as db
+from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+
+host='localhost'
+# Default 값은 3306  (Port 번호는 변경될 수 있음)
+port=int(3306)
+user='root' # server 에서는 os.env 써야한다!
+passwd='root' # server 에서는 os.env 써야한다!
+database='test'
+autocommit=False
+
 
 location_return_url = ''
 facilities_return_url = 'https://dapi.kakao.com/v2/local/search/keyword.json'
 json_file = 'temp.json'
 
+Base = declarative_base()
+
+class store_class(Base):
+    __tablename__ = 'store'  # 데이터베이스에서 사용할 테이블 이름입니다.
+
+    id = db.Column(db.Integer, primary_key=True)
+    place_name = db.Column(db.String(50))
+    phone = db.Column(db.String(30))
+    x = db.Column(db.Float)
+    y = db.Column(db.Float)
+    #addresses = relationship("Address", back_populates="user") // 다른 테이블과 foreign key 관계일 때 사용하는거 같음
+    def __init__(self, id, place_name, phone, x, y):
+        self.id = id
+        self.place_name = place_name
+        self.phone = phone
+        self.x = x
+        self.y = y
+    
+    def __repr__(self):
+       return f"User(id={self.id!r}, name={self.place_name!r}, phone={self.phone!r}, x={self.x}, y={self.y})"
 
 result_dict = {
         'documents' : [],
@@ -89,7 +122,7 @@ def facilities_return(x, y, radius, keyword):
 def read_result_dict():
     global result_dict
     try:
-        with open(json_file, 'w') as temp:
+        with open(json_file, 'r') as temp:
             result_dict = json.load(temp)   
     except:
         result_dict = {
@@ -99,10 +132,45 @@ def read_result_dict():
         }
     }
 
+def write_to_db(result_dict):
+    #디비 연결
+    engine = db.create_engine(f'mysql+pymysql://{user}:{passwd}@{host}:{port}/{database}')
+    
+    # table 만드는데 사용하는 metadata 생성    
+    metadata = db.MetaData()
+
+    
+    #이미 테이블 있으면 삭제한다.
+    engine.execute('DROP TABLE IF EXISTS store')
+
+    db.Table('store',
+        metadata,
+        db.Column('id', db.Integer, primary_key=True, autoincrement=False),
+        db.Column('place_name', db.String(50)),
+        db.Column('phone', db.String(30)),
+        db.Column('x', db.Numeric(20, 16)),
+        db.Column('y', db.Numeric(20, 16)),
+    )   
+    
+    metadata.create_all(engine)
+    
+    #engine 에 종속적인 세션을 만든다.
+    Session = sessionmaker(engine)
+    session = Session() # 이거로 orm 통제
+    
+    
+    for store_info in result_dict['documents']:
+        #print(store_info['id'], store_info['place_name'], store_info['x'], store_info['y'])
+        store = store_class(store_info['id'], store_info['place_name'], store_info['phone'], store_info['x'], store_info['y'])
+        session.add(store)
+    session.commit()
+
+
+
 def write_result():
     global json_file
     
-    f = open(json_file, 'w')
+    
     # 파이썬은 완벽하게 json을 json 형식으로 쓰지 않기 때문에 json.dump라고 해줘야 한다.
     for i in result_dict['documents']:
         i['distance'] = 0
@@ -111,11 +179,15 @@ def write_result():
     result_dict['documents'] = [dict(t) for t in {tuple(d.items()) for d in result_dict['documents']}]
 
     print(f'you have {len(result_dict["documents"])} in json file!')
+    
+    # 파일에 쓰기
+    #f = open(json_file, 'w')
+    #json.dump(result_dict, f, ensure_ascii=False)
+    #f.close()
 
-    json.dump(result_dict, f, ensure_ascii=False)
-    f.close()
 
-read_result_dict()
+#read_result_dict()
+
 
 facilities_return(126.936611826163, 37.55518625891015, 250, '카페')
 facilities_return(126.936611826163, 37.55675399978744, 250, '카페')
@@ -130,4 +202,7 @@ facilities_return(126.939156399652, 37.55675399978744, 250, '카페')
 facilities_return(126.939156399652, 37.55848393786034, 250, '카페')
 
 write_result()
+
+write_to_db(result_dict)
+
 # 이제부터는 파일에서 불러와서 중복된거면 포함 안시키는 방향으로 바뀐다.
