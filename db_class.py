@@ -26,7 +26,7 @@ class StoreClass(Base):
     def __repr__(self):
        return f"User(id={self.id!r}, name={self.place_name!r}, phone={self.phone!r}, x={self.x}, y={self.y})"
 
-class CommentCalss(Base):
+class CommentClass(Base):
     __tablename__ = COMMENT_TABLE_NAME  # 데이터베이스에서 사용할 테이블 이름입니다.
 
     id = db.Column(db.Integer, primary_key=True)

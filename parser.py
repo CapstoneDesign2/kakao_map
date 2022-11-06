@@ -4,7 +4,7 @@ import pymysql
 import sqlalchemy as db
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
-from db_class import StoreClass, CommentCalss, STORE_TABLE_NAME, COMMENT_TABLE_NAME
+from db_class import StoreClass, CommentClass, STORE_TABLE_NAME, COMMENT_TABLE_NAME
 from db_configure import *
 
 
@@ -18,23 +18,9 @@ import time
 import re
 from bs4 import BeautifulSoup
 
-json_file = 'temp.json'
-write_file = 'result.json'
-comment_file = 'comments.json'
-write_dict = {
-    "documents": []
-}
-result_dict = {
-
-}
-comment_dict = {
-    "documents" : []
-}
-
 class LenError(Exception):
     def __str__(self):
         return "length does not match"
-
 
 def get_comments(response):
     '''
@@ -72,68 +58,10 @@ def get_comments(response):
         # hasNext를 comment_response 의 hasNext로 바꿔준다.
         response['comment']['hasNext'] = comment_response['comment']['hasNext']        
 
-def scroll(browser):
-    last_height = browser.execute_script("return document.body.scrollHeight")
-    count = 0
-    while True:
-        # 스크롤 아래로 내리기
-        browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(2)
-
-        # 스크롤 다운 후 스크롤 높이 다시 가져옴
-        new_height = browser.execute_script("return document.body.scrollHeight")
-        if new_height == last_height:
-            break
-        last_height = new_height
-        print(f"scrolling {count}")
-        count+=1
-        # 리뷰 더보기 버튼 클릭하기
-        try:
-            txt_more = browser.find_element(By.CLASS_NAME, 'txt_more')
-            html = browser.page_source
-            soup = BeautifulSoup(html, 'lxml')
-            txt_more.click()
-            if soup.find(class_='link_unfold'):# 마지막에 다다르면 끈다.
-                break
-            if soup.find(class_='box_grade_off'):# 리뷰가 제공되지 않는 매장이라면 off
-                break
-            # http://place.map.kakao.com/1507185592 이거 해결해야함
-            if count > 50: # 임시로 해놓음;; 원인을 못찾겠다
-                break
-        except:
-            break
-
-def one_store_analyze(store_data):
-    '''
-    한 가게의 정보를 받으면 해당 정보를 바탕으로 댓글을 추출하는 함수다.
-    
-    store_data(dictionary) : 가게의 정보가 담긴 dictionary 
-    browser 셀레니움 드라이버
-    '''
-    global write_dict
-    global comment_dict
-    
-
-    # 디버깅 부
-    
-    # https://place.map.kakao.com/20000829 언플러그드 신촌
-    # https://place.map.kakao.com/8122805 클로리스
-    # https://place.map.kakao.com/751832575 리뷰 없는 곳
-    #store_data['place_url'] = 'https://place.map.kakao.com/751832575'
-    #store_data['id'] = 751832575
-    
-    # 디버깅 부
-
-
-    # url 을 초기화 
-    #url = store_data['place_url']
-    store_id = store_data['id']
-    #https://place.map.kakao.com/main/v/884526216
-    print(url)
-    #print(store_data['place_name'])
-    # url에서 정보를 가져온다.
+def one_store_analyze(store_id):
     
     info_url = f'https://place.map.kakao.com/main/v/{store_id}'
+    
     # basicInfo의 feedback은 댓글나열한거
     # s2 graph가 매장의 정보를 나열한거
     
@@ -148,36 +76,49 @@ def one_store_analyze(store_data):
     get_comments(response)
     #print(response)
     
-    
-    
+    ## comment 디비에 저장
     for comment in response['comment']['list']:
-        comment['store_id'] = response['basicInfo']['cid']
-        comment_dict['documents'].append(comment)
-    
-    write_dict['documents'].append(response)
+        store = CommentClass(comment['commentid'], 
+                             comment['contents'], 
+                             comment['point'], 
+                             comment['photoCnt'], 
+                             comment['likeCnt'],
+                             comment['kakaoMapUserId'],
+                             photoList="",
+                             strengths="",
+                             userCommentCount=comment['userCommentCount'],
+                             userCommentAverageScore=comment['userCommentAverageScore'],
+                             date=comment['date'],
+                             store_id=store_id
+                            )
+        session.add(store)
+    session.commit()
+    ## comment 디비에 저장
 
     #print(response['comment']['list'])
     #print(len(response['comment']['list']))
 
-def read_result_dict():
-    global result_dict
-    try:
-        with open(json_file, 'r') as temp:
-            result_dict = json.load(temp)   
-    except:
-        print('file read error')
-        exit(1)
-
 def read_store_from_database():
-    engine = db.create_engine(f'mysql+pymysql://{user}:{passwd}@{host}:{port}/{database}')
-    Session = sessionmaker(engine)
-    session = Session() # 이거로 orm 통제
     
     stmt = db.select(StoreClass)
     # store 의 id 모음
     ret = [x.id for x in session.scalars(stmt)]    
     
     return ret
+
+def comment_db_control():
+    engine.execute(f'DROP TABLE IF EXISTS {COMMENT_TABLE_NAME}')
+    # 이 블럭은 table 을 만든다.
+    
+    # table 만드는데 사용하는 metadata 생성 
+    metadata = db.MetaData()
+    Base = declarative_base()
+    
+    #CommentClass.__table__.drop(engine)
+    CommentClass.__table__.create(engine)
+    
+    #metadata.create_all(engine)
+    # table 생성 완료
 
 if __name__ == '__main__':
     
@@ -195,26 +136,19 @@ if __name__ == '__main__':
       "x": "126.94335642719437",
       "y": "37.55884593416747"
     }
-    read_store_from_database()
     
+    engine = db.create_engine(f'mysql+pymysql://{user}:{passwd}@{host}:{port}/{database}')
+    Session = sessionmaker(engine)
+    session = Session() # 이거로 orm 통제
     
-    read_result_dict()
-    #f = open(write_file, 'w')
-    #f2 = open(comment_file, 'w')
+    store_id_list = read_store_from_database()
+    #print(store_id_list)
+    #exit()
     
-    #one_store_analyze(doc, browser, f)
-
-    # 이미 json은 중복 제거 했고
-    #print(f'read {len(result_dict["documents"])} stores')
-    
-    # 매장 id로 매장 구분할까? dictionary에 있는 이상은 그게 쉬울꺼 같기도?
-    #for i in result_dict['documents']:
-    one_store_analyze(i)
+    comment_db_control()
+    exit()
+    for id in store_id_list:
+        one_store_analyze(id)
     
     #one_store_analyze(doc)
-    json.dump(write_dict, f, ensure_ascii=False)
-    json.dump(comment_dict, f2, ensure_ascii=False)
-    
-    f.close()
-    f2.close()
     
