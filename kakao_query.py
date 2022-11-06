@@ -4,7 +4,7 @@ import pymysql
 import sqlalchemy as db
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
-
+from db_class import store_class
 
 host='localhost'
 # Default 값은 3306  (Port 번호는 변경될 수 있음)
@@ -27,26 +27,6 @@ result_dict = {
             
         }
     }
-
-class store_class(Base):
-    __tablename__ = 'store'  # 데이터베이스에서 사용할 테이블 이름입니다.
-
-    id = db.Column(db.Integer, primary_key=True)
-    place_name = db.Column(db.String(50))
-    phone = db.Column(db.String(30))
-    x = db.Column(db.Float)
-    y = db.Column(db.Float)
-    #addresses = relationship("Address", back_populates="user") // 다른 테이블과 foreign key 관계일 때 사용하는거 같음
-    def __init__(self, id, place_name, phone, x, y):
-        self.id = id
-        self.place_name = place_name
-        self.phone = phone
-        self.x = x
-        self.y = y
-    
-    def __repr__(self):
-       return f"User(id={self.id!r}, name={self.place_name!r}, phone={self.phone!r}, x={self.x}, y={self.y})"
-
 
 def location_return(location):
     '''
