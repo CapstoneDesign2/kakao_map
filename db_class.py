@@ -2,8 +2,8 @@ import sqlalchemy as db
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-STORE_TABLE_NAME = 'store'
-COMMENT_TABLE_NAME = 'comment'
+STORE_TABLE_NAME = 'test_Cafe'
+COMMENT_TABLE_NAME = 'test_comment'
 
 Base = declarative_base()
 
