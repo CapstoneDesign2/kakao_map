@@ -4,7 +4,9 @@ import pymysql
 import sqlalchemy as db
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
-from db_class import store_class, comment_class
+from db_class import StoreClass, CommentCalss, STORE_TABLE_NAME, COMMENT_TABLE_NAME
+from db_configure import *
+
 
 import pandas as pd
 import numpy as np
@@ -28,8 +30,6 @@ result_dict = {
 comment_dict = {
     "documents" : []
 }
-
-Base = declarative_base()
 
 class LenError(Exception):
     def __str__(self):
@@ -71,7 +71,6 @@ def get_comments(response):
         response['comment']['list'].extend(comment_response['comment']['list'])
         # hasNext를 comment_response 의 hasNext로 바꿔준다.
         response['comment']['hasNext'] = comment_response['comment']['hasNext']        
-
 
 def scroll(browser):
     last_height = browser.execute_script("return document.body.scrollHeight")
@@ -127,11 +126,11 @@ def one_store_analyze(store_data):
 
 
     # url 을 초기화 
-    url = store_data['place_url']
+    #url = store_data['place_url']
     store_id = store_data['id']
     #https://place.map.kakao.com/main/v/884526216
     print(url)
-    print(store_data['place_name'])
+    #print(store_data['place_name'])
     # url에서 정보를 가져온다.
     
     info_url = f'https://place.map.kakao.com/main/v/{store_id}'
@@ -169,6 +168,17 @@ def read_result_dict():
         print('file read error')
         exit(1)
 
+def read_store_from_database():
+    engine = db.create_engine(f'mysql+pymysql://{user}:{passwd}@{host}:{port}/{database}')
+    Session = sessionmaker(engine)
+    session = Session() # 이거로 orm 통제
+    
+    stmt = db.select(StoreClass)
+    # store 의 id 모음
+    ret = [x.id for x in session.scalars(stmt)]    
+    
+    return ret
+
 if __name__ == '__main__':
     
     doc = {
@@ -185,9 +195,12 @@ if __name__ == '__main__':
       "x": "126.94335642719437",
       "y": "37.55884593416747"
     }
+    read_store_from_database()
+    
+    
     read_result_dict()
-    f = open(write_file, 'w')
-    f2 = open(comment_file, 'w')
+    #f = open(write_file, 'w')
+    #f2 = open(comment_file, 'w')
     
     #one_store_analyze(doc, browser, f)
 
@@ -195,8 +208,8 @@ if __name__ == '__main__':
     #print(f'read {len(result_dict["documents"])} stores')
     
     # 매장 id로 매장 구분할까? dictionary에 있는 이상은 그게 쉬울꺼 같기도?
-    for i in result_dict['documents']:
-        one_store_analyze(i)
+    #for i in result_dict['documents']:
+    one_store_analyze(i)
     
     #one_store_analyze(doc)
     json.dump(write_dict, f, ensure_ascii=False)

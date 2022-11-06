@@ -4,15 +4,8 @@ import pymysql
 import sqlalchemy as db
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
-from db_class import store_class
-
-host='localhost'
-# Default 값은 3306  (Port 번호는 변경될 수 있음)
-port=int(3306)
-user='root' # server 에서는 os.env 써야한다!
-passwd='root' # server 에서는 os.env 써야한다!
-database='test'
-autocommit=False
+from db_class import StoreClass, STORE_TABLE_NAME
+from db_configure import *
 
 
 location_return_url = ''
@@ -118,21 +111,23 @@ def write_to_db(result_dict):
     engine = db.create_engine(f'mysql+pymysql://{user}:{passwd}@{host}:{port}/{database}')
     
     #이미 테이블 있으면 삭제한다.
-    engine.execute('DROP TABLE IF EXISTS store')
-
-    # table 만드는데 사용하는 metadata 생성    
-    metadata = db.MetaData()
+    #engine.execute(f'DROP TABLE IF EXISTS {STORE_TABLE_NAME}')
+    # 이 블럭은 table 을 만든다.
     
-    db.Table('store',
-        metadata,
-        db.Column('id', db.Integer, primary_key=True, autoincrement=False),
-        db.Column('place_name', db.String(50)),
-        db.Column('phone', db.String(30)),
-        db.Column('x', db.Numeric(20, 16)),
-        db.Column('y', db.Numeric(20, 16)),
-    )   
+    # table 만드는데 사용하는 metadata 생성 
+    # metadata = db.MetaData()
     
-    metadata.create_all(engine)
+    # db.Table(STORE_TABLE_NAME,
+    #     metadata,
+    #     db.Column('id', db.Integer, primary_key=True, autoincrement=False),
+    #     db.Column('place_name', db.String(50)),
+    #     db.Column('phone', db.String(30)),
+    #     db.Column('x', db.Numeric(20, 16)),
+    #     db.Column('y', db.Numeric(20, 16)),
+    # )   
+    
+    # metadata.create_all(engine)
+    
     
     #engine 에 종속적인 세션을 만든다.
     Session = sessionmaker(engine)
@@ -141,7 +136,7 @@ def write_to_db(result_dict):
     
     for store_info in result_dict['documents']:
         #print(store_info['id'], store_info['place_name'], store_info['x'], store_info['y'])
-        store = store_class(store_info['id'], store_info['place_name'], store_info['phone'], store_info['x'], store_info['y'])
+        store = StoreClass(store_info['id'], store_info['place_name'], store_info['phone'], store_info['x'], store_info['y'])
         session.add(store)
     session.commit()
 
@@ -168,16 +163,16 @@ def write_result():
 
 
 facilities_return(126.936611826163, 37.55518625891015, 250, '카페')
-facilities_return(126.936611826163, 37.55675399978744, 250, '카페')
-facilities_return(126.936611826163, 37.55848393786034, 250, '카페')
+#facilities_return(126.936611826163, 37.55675399978744, 250, '카페')
+#facilities_return(126.936611826163, 37.55848393786034, 250, '카페')
 
-facilities_return(126.934991512720, 37.55518625891015, 250, '카페')
-facilities_return(126.934991512720, 37.55675399978744, 250, '카페')
-facilities_return(126.934991512720, 37.55848393786034, 250, '카페')
+#facilities_return(126.934991512720, 37.55518625891015, 250, '카페')
+#facilities_return(126.934991512720, 37.55675399978744, 250, '카페')
+#facilities_return(126.934991512720, 37.55848393786034, 250, '카페')
 
-facilities_return(126.939156399652, 37.55518625891015, 250, '카페')
-facilities_return(126.939156399652, 37.55675399978744, 250, '카페')
-facilities_return(126.939156399652, 37.55848393786034, 250, '카페')
+#facilities_return(126.939156399652, 37.55518625891015, 250, '카페')
+#facilities_return(126.939156399652, 37.55675399978744, 250, '카페')
+#facilities_return(126.939156399652, 37.55848393786034, 250, '카페')
 
 #write_result()
 
