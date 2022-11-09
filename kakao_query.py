@@ -61,7 +61,6 @@ def facilities_return(x, y, radius, keyword):
 
     # 응답 받아오기
 
-
     while True:
         try:
             response = requests.get(facilities_return_url, params=params, data=data, headers=headers).json()
@@ -122,22 +121,22 @@ def write_to_db(result_dict):
     
     for store_info in result_dict['documents']:
         #print(store_info['id'], store_info['place_name'], store_info['x'], store_info['y'])
-        store = StoreClass(store_info['id'], store_info['place_name'], store_info['phone'], store_info['x'], store_info['y'])
+        store = StoreClass(store_info['id'], store_info['place_name'], store_info['road_address_name'], store_info['phone'], store_info['x'], store_info['y'])
         session.add(store)
     session.commit()
   
 
 facilities_return(126.936611826163, 37.55518625891015, 250, '카페')
-facilities_return(126.936611826163, 37.55675399978744, 250, '카페')
-facilities_return(126.936611826163, 37.55848393786034, 250, '카페')
+#facilities_return(126.936611826163, 37.55675399978744, 250, '카페')
+#facilities_return(126.936611826163, 37.55848393786034, 250, '카페')
 
-facilities_return(126.934991512720, 37.55518625891015, 250, '카페')
-facilities_return(126.934991512720, 37.55675399978744, 250, '카페')
-facilities_return(126.934991512720, 37.55848393786034, 250, '카페')
+#facilities_return(126.934991512720, 37.55518625891015, 250, '카페')
+#facilities_return(126.934991512720, 37.55675399978744, 250, '카페')
+#facilities_return(126.934991512720, 37.55848393786034, 250, '카페')
 
-facilities_return(126.939156399652, 37.55518625891015, 250, '카페')
-facilities_return(126.939156399652, 37.55675399978744, 250, '카페')
-facilities_return(126.939156399652, 37.55848393786034, 250, '카페')
+#facilities_return(126.939156399652, 37.55518625891015, 250, '카페')
+#facilities_return(126.939156399652, 37.55675399978744, 250, '카페')
+#facilities_return(126.939156399652, 37.55848393786034, 250, '카페')
 
 
 # distance 통일시켜서 중복되게 유도한다.

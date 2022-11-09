@@ -6,7 +6,8 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 from db_class import StoreClass, CommentClass, STORE_TABLE_NAME, COMMENT_TABLE_NAME
 from db_configure import *
-
+from one_sentence_keyword import *
+from kiwipiepy.utils import Stopwords
 
 import pandas as pd
 import numpy as np
@@ -76,6 +77,13 @@ def one_store_analyze(store_id):
     get_comments(response)
     #print(response)
     
+    # 일단 점수 평균도 받아와야 한다.
+    # 카페 주소
+    # 카페 이미지
+    # 카페 chart 안에서 update 하는 식으로 한다. 
+    # 이거 update query 보내면 될꺼 같음
+    
+
     ## comment 디비에 저장
     for comment in response['comment']['list']:
         # datetime 형식으로 바꾸는게 낫겠지?
@@ -91,7 +99,20 @@ def one_store_analyze(store_id):
             comment_final = comment_temp[:510]
         else:
             comment_final = comment_temp
+        # 
+        # one_sentence_keyword는 sentence 와 stopword 동시에 넣는다.
         
+        # keyword 가 어떻게 저장되는지에 따라 바뀐다. 
+        # 만약 가게별로 keyword를 넣는다면 빈 배열을 하나 추가해서 keyword를 추가하게 하고
+        # 댓글별로 달리면 그냥 keyword 배열을 db 에 넣으면 된다!
+        
+        #keyword = [for i in list()]
+
+
+        # 또한 photoCnt 를 통해서 0이 아니라면 사진을 받아오는 방식을 사용한다.
+        # 사진은 문자열로 받을지 아니면 링크로 받을지는 아직 미정
+        # json 타입 자료형을 쓰는게 best 인거 같다. 일단 지금 상황으로는
+
         store = CommentClass(
                              comment['commentid'],  
                              comment_final,
@@ -128,35 +149,25 @@ def comment_db_control():
 
 if __name__ == '__main__':
     
-    doc = {
-      "address_name": "서울 서대문구 대현동 27-33",
-      "category_group_code": "CE7",
-      "category_group_name": "카페",
-      "category_name": "음식점 > 카페 > 테마카페 > 디저트카페",
-      "distance": "138",
-      "id": "577825774",
-      "phone": "02-363-9222",
-      "place_name": "그릭데이 이대점",
-      "place_url": "http://place.map.kakao.com/577825774",
-      "road_address_name": "서울 서대문구 신촌역로 22-8",
-      "x": "126.94335642719437",
-      "y": "37.55884593416747"
-    }
+    stopwords = Stopwords()
+    for key, value in stopwords_dict.items():
+        stopwords.add((key, value))
     
     engine = db.create_engine(f'mysql+pymysql://{user}:{passwd}@{host}:{port}/{database}')
     Session = sessionmaker(engine)
     session = Session() # 이거로 orm 통제
     
+
     store_id_list = read_store_from_database()
     #print(store_id_list)
     #exit()
     
     comment_db_control()
     
-    #one_store_analyze(763496937)
+    one_store_analyze(763496937)
     #comment.get('contents'),
-    for id in store_id_list:
-        one_store_analyze(id)
+    #for id in store_id_list:
+    #    one_store_analyze(id)
     
     #one_store_analyze(doc)
     
