@@ -121,7 +121,14 @@ def write_to_db(result_dict):
     
     for store_info in result_dict['documents']:
         #print(store_info['id'], store_info['place_name'], store_info['x'], store_info['y'])
-        store = StoreClass(store_info['id'], store_info['place_name'], store_info['road_address_name'], store_info['phone'], store_info['x'], store_info['y'])
+        store = StoreClass(
+                            store_info['id'], 
+                            store_info['place_name'], 
+                            store_info['road_address_name'], 
+                            store_info['phone'], 
+                            store_info['x'], 
+                            store_info['y']
+                        )
         session.add(store)
     session.commit()
   
