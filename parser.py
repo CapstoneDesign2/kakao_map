@@ -79,7 +79,7 @@ def comment_db_write(comment_list, store_id):
         # 사진은 문자열로 받을지 아니면 링크로 받을지는 아직 미정
         # json 타입 자료형을 쓰는게 best 인거 같다. 일단 지금 상황으로는
 
-        store = CommentClass(
+        c = CommentClass(
                              comment['commentid'],  
                              comment_contents,
                              comment.get('point'),
@@ -94,7 +94,7 @@ def comment_db_write(comment_list, store_id):
                              date=comment['date'],
                              store_id=store_id
                             )
-        session.add(store)
+        session.add(c)
 
 def comment_score_write(score_sum, score_count, store_id):
     #comment scoresum scorecount
@@ -102,7 +102,9 @@ def comment_score_write(score_sum, score_count, store_id):
         session\
         .query(StoreClass)\
         .filter_by(id=store_id)\
-        .update({'star_mean' : round(int(score_sum)/int(score_count), 1)})
+        .update({'star_mean' : round(int(score_sum)/int(score_count), 1), 'comment_count' : score_count})
+        # 여기서 score count를 update를 해줄 것!
+        # {'star_mean' : round(int(score_sum)/int(score_count), 1), 'comment_count' : 'score_count'}
     except:
         print("no star!\n")
         return

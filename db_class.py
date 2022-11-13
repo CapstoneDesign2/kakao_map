@@ -2,8 +2,8 @@ import sqlalchemy as db
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-STORE_TABLE_NAME = 'test_Cafe'
-COMMENT_TABLE_NAME = 'test_Review'
+STORE_TABLE_NAME = 'Cafe'
+COMMENT_TABLE_NAME = 'Review'
 
 Base = declarative_base()
 
@@ -23,6 +23,8 @@ class StoreClass(Base):
 
     main_photo = db.Column(db.String(100))
     star_mean = db.Column(db.Float)
+    
+    comment_count = db.Column(db.Integer)
     # relationship 을 해야하나?
     
     #addresses = relationship("Address", back_populates="user") // 다른 테이블과 foreign key 관계일 때 사용하는거 같음
@@ -37,6 +39,7 @@ class StoreClass(Base):
 
         self.main_photo = ""
         self.star_mean = 0
+        self.comment_count = 0
 
     
     def __repr__(self):
