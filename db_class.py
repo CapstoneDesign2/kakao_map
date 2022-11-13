@@ -25,6 +25,7 @@ class StoreClass(Base):
     star_mean = db.Column(db.Float)
     
     comment_count = db.Column(db.Integer)
+    bookmark_cnt = db.Column(db.Integer)
     # relationship 을 해야하나?
     
     #addresses = relationship("Address", back_populates="user") // 다른 테이블과 foreign key 관계일 때 사용하는거 같음
@@ -40,6 +41,7 @@ class StoreClass(Base):
         self.main_photo = ""
         self.star_mean = 0
         self.comment_count = 0
+        self.bookmark_cnt = 0
 
     
     def __repr__(self):
