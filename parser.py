@@ -126,9 +126,9 @@ def one_store_analyze(store_id):
     #print(response)
     mainphotourl=""
     # 삼항 연산자로 바꾼다. 아니면 try catch로 바꾸면 ㄱㅊ은가? 현재는 디버깅용
-    if response.get('basicInfo').get('mainphotourl'):
+    try:
         mainphotourl= response.get('basicInfo').get('mainphotourl')
-    else:
+    except:
         print('메인 사진 없다~')
     #print(f'main mainphotourl : {mainphotourl}')
     
