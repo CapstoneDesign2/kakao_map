@@ -57,7 +57,7 @@ class CommentClass(Base):
     likeCnt = db.Column(db.Integer)
     kakaoMapUserId = db.Column(db.String(100))
     username = db.Column(db.String(30))
-    # photoList
+    photoList = db.Column(db.String(1024))
     # strengths
     userCommentCount = db.Column(db.Integer)
     userCommentAverageScore = db.Column(db.Float) # 정확도 크게 상관 없음
@@ -91,7 +91,7 @@ class CommentClass(Base):
         self.kakaoMapUserId = kakaoMapUserId
         
         self.username=username
-        #self.photoList = photoList # 이거 저장 방식 json
+        self.photoList = photoList
         #self.strengths = strengths
         self.userCommentCount = userCommentCount
         

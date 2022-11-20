@@ -60,6 +60,13 @@ def get_comments(response):
         response['comment']['hasNext'] = comment_response['comment']['hasNext']        
 
 def comment_db_write(comment_list, store_id):
+    # 키워드 dictionary 미리 선언을 한다.
+    # 이후에 comment_list 를 순회하면서 장점을 전부 더해서 store 테이블에 넣어준다.
+    # 키워드 dictionary {} 값은 모두 0으로 초기화
+    
+    
+    
+    
     for comment in comment_list:
         # datetime 형식으로 바꾸는게 낫겠지?        
         # 문자열 없거나 길이 초과시 대처법
@@ -68,17 +75,28 @@ def comment_db_write(comment_list, store_id):
         comment_contents = "" if not comment_temp else comment_temp[:512] 
         # hard coding 말고 변수를 추가하자 그래야 db 랑 일관성 유지가 가능
         
-        # keyword 가 어떻게 저장되는지에 따라 바뀐다. 
-        # 만약 가게별로 keyword를 넣는다면 빈 배열을 하나 추가해서 keyword를 추가하게 하고
-        # 댓글별로 달리면 그냥 keyword 배열을 db 에 넣으면 된다!
-        
         #keyword = [for i in list()]
 
+        #photolist 받아오기
+        photo_list_string = ""
+        try:
+            if comment.get('photoCnt'):
+                photo_list_string = str([x['url'] for x in comment.get('photoList')[0:2]])
+        except:
+            if comment.get('photoCnt'):
+                print("에러")
+            pass
+        #print(str(photo_list))
+        
+        
+        #장점 classification 해주기
+        #good_side = infer()
+        #dictionary에 각각 더해준다.
 
+        
         # 또한 photoCnt 를 통해서 0이 아니라면 사진을 받아오는 방식을 사용한다.
         # 사진은 문자열로 받을지 아니면 링크로 받을지는 아직 미정
-        # json 타입 자료형을 쓰는게 best 인거 같다. 일단 지금 상황으로는
-
+        
         c = CommentClass(
                              comment['commentid'],  
                              comment_contents,
@@ -87,7 +105,7 @@ def comment_db_write(comment_list, store_id):
                              comment.get('likeCnt'),
                              comment.get('kakaoMapUserId'),
                              comment.get('username'),
-                             photoList="",
+                             photoList=photo_list_string,
                              strengths="",
                              userCommentCount=comment['userCommentCount'],
                              userCommentAverageScore=comment['userCommentAverageScore'],
@@ -95,6 +113,11 @@ def comment_db_write(comment_list, store_id):
                              store_id=store_id
                             )
         session.add(c)
+    
+    # dictionary를 순회하면서 여기서 키워드 5개를 update 한다. 
+    #session.query(StoreClass).filter_by(id=store_id).update({})
+    
+    
 
 def comment_score_write(score_sum, score_count, store_id):
     #comment scoresum scorecount
@@ -169,6 +192,11 @@ def comment_db_control():
 
 if __name__ == '__main__':
     
+    
+    # 여기에 모델 불러와서 infer를 하는 방식이 가능할꺼 같음
+    # model.어쩌구
+    # 그리고 comment 가져오는 함수 안에서 infer 하기
+    
     stopwords = Stopwords()
     for key, value in stopwords_dict.items():
         stopwords.add((key, value))
@@ -184,7 +212,7 @@ if __name__ == '__main__':
     
     comment_db_control()
     
-    #one_store_analyze(763496937)
+    #one_store_analyze(1011256721)
     #session.commit()
     #comment.get('contents'),
     for id in store_id_list:
